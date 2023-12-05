@@ -25,6 +25,10 @@ const showAlbums = async() => {
         section.append(eLink);
         eLink.id = "edit-link";
 
+        const img = document.createElement("img");
+        img.src = album.img;
+        section.append(img);
+
         const h3 = document.createElement("h3");
         h3.innerHTML = album.name;
         section.append(h3);

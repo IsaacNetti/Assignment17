@@ -6,90 +6,41 @@ app.use(express.static("public"));
 app.use(express.json());
 const cors = require("cors");
 app.use(cors());
+const mongoose = require("mongoose");
 
 const upload = multer({ dest: __dirname + "/public/images" });
+
+mongoose
+  .connect(
+    "mongodb+srv://isaacnetti:2U7OGFw2qTU36CEd@cluster.kjhijtg.mongodb.net/?retryWrites=true&w=majority"
+  )
+  .then(() => console.log("Connected to mongodb..."))
+  .catch((err) => console.error("could not connect ot mongodb...", err));
+
+const albumSchema = new mongoose.Schema({
+    name: String,
+    artist: String,
+    rating: String,
+    genre: String,
+    releaseDate:String,
+    songs: [String],
+    img: String
+  });
 
 app.get("/", (req, res) => {
     res.sendFile(__dirname + "/index.html");
 });
 
-let albums = [{
-        _id: 1,
-        name: "Maybe Man",
-        artist: "AJR", 
-        rating:"7",
-        genre:"Alternitive Pop",
-        releaseDate: "2023-11-10",
-        songs: [
-            "Maybe Man",
-            "Touchy Feely Fool",
-            "Yes I'm A Mess",
-            "The Dumb Song",
-            "Inertia",
-            "Turning out Pt. iii",
-            "Hole in the Bottom of My Brain",
-            "The DJ is Crying for help",
-            "I Won't",
-            "Steve's Going to London",
-            "God is Really Real",
-            "2085",
-        ],
-    },
-    {
-        _id: 2,
-        name: "1989 (Taylor's version)",
-        artist: "Taylor Swift", 
-        rating:"9",
-        genre:"Pop",
-        releaseDate: "2023-10-27",
-        songs: [
-            "Welcome to New York",
-            "Blank Space",
-            "Style",
-            "Out Of The Woods",
-            "All You Had To Do Was Stay",
-            "Shake It Off",
-            "I Wish You Would",
-            "Bad Blood",
-            "Wildest Dreams",
-            "How You Get The Girl",
-            "This Love",
-            "I Know Places",
-            "Clean",
-            "Wonderland",
-            "You Are In Love",
-            "New Romantics",
-        ],
-    },
-    {
-        _id: 3,
-        name: "Stick Season",
-        artist: "Noah Kahan", 
-        rating:"8",
-        genre:"Indie Folk",
-        releaseDate: "2023-06-09",
-        songs: [
-            "Northern Attitude",
-            "Stick Season",
-            "All My Love",
-            "She Calls Me Back",
-            "Come Over",
-            "New Perspective",
-            "Everywhere, Everything",
-            "Orange Juice",
-            "Strawberry Wine",
-            "Growing Sideways",
-            "Halloween",
-            "Homesick",
-            "Still",
-            "The View Between Villages",
-        ],
-    },
-];
+const Album = mongoose.model("Album",albumSchema);
 
 app.get("/api/albums", (req, res) => {
-    res.send(albums);
+    getAlbums(res);
 });
+
+const getAlbums = async (res) =>{
+    const albums = await Album.find();
+    res.send(albums);
+}
 
 app.post("/api/albums",upload.single("img"), (req, res) => {
     const result = validatealbum(req.body);
@@ -100,24 +51,29 @@ app.post("/api/albums",upload.single("img"), (req, res) => {
         return;
     }
 
-    const album = {
-        _id: albums.length + 1,
+    const album = new Album ({
         name: req.body.name,
         artist: req.body.artist,
         rating: req.body.rating,
         genre: req.body.genre,
         releaseDate: req.body.released,
         songs: req.body.songs.split(",")
-    }
+    });
 
-    albums.push(album);
-    res.send(albums);
+    if (req.file) {
+        album.img = "images/" + req.file.filename;
+      }
+
+    createAlbum(album, res);
 });
+
+const createAlbum = async (album,res) =>{
+    const result = await album.save();
+    res.send(album);
+}
+
 app.put("/api/albums/:id", upload.single("img"), (req, res) => {
-    const id = parseInt(req.params.id);
-
-    const album = albums.find((r) => r._id === id);
-
+   
     const result = validatealbum(req.body);
 
     if (result.error) {
@@ -125,33 +81,34 @@ app.put("/api/albums/:id", upload.single("img"), (req, res) => {
         return;
     }
 
-    album.name = req.body.name;
-    album.artist = req.body.artist;
-    album.rating = req.body.rating;
-    album.genre = req.body.genre;
-    album.releaseDate = req.body.released;
-    album.songs = req.body.songs.split(",");
-
-
-    res.send(album);
+    updateAlbum(req,res);
 });
 
-app.delete("/api/albums/:id", upload.single("img"), (req, res) => {
-    const id = parseInt(req.params.id);
-
-    const album = albums.find((r) => r._id === id);
-
-    if (!album) {
-        res.status(404).send("The recipe was not found");
-        return;
+const updateAlbum = async (req,res) =>{
+    let update = {
+        name: req.body.name,
+        artist: req.body.artist,
+        rating: req.body.rating,
+        genre: req.body.genre,
+        releaseDate: req.body.released,
+        songs: req.body.songs.split(",")
+    }
+    if(req.file){
+        update.img = "images/" + req.file.filename;
     }
 
-    const index = albums.indexOf(album,);
-    albums.splice(index, 1);
+    const result = await Album.updateOne({ _id: req.params.id },update);
+    const album = await Album.findById(req.params.id);
     res.send(album);
+}
 
+app.delete("/api/albums/:id", upload.single("img"), (req, res) => {
+    removeAlbum(res,req.params.id);
 });
-
+const removeAlbum = async (res, id) => {
+    const album = await Album.findByIdAndDelete(id);
+    res.send(album);
+  };
 
 const validatealbum = (album) => {
     const schema = Joi.object({

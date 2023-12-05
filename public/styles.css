@@ -7,6 +7,12 @@ body {
 header{
     text-align: center;
 }
+img {
+    max-width: 90%;
+    display: block;
+    margin: auto;
+    border:#000 10px solid;
+}
 a{
     text-decoration: none;
     color:#000;
