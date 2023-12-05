@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>Albums</h1>
+        <a href="#" id="add-link">Add</a>
+    </header>
+    
+        <div id="album-list" class="columns"></div>
+    <div id="add-album-container" class="dialog transparent">
+        <span class="close">&times;</span>
+
+        <h3 id="add-title">album</h3>
+        <form id="add-album-form" method="post">
+            <input type="hidden" name="_id" value="-1" />
+            <p>
+                <label for="name ">Album Name:</label>
+                <input type="text" id="name" name="name" required />
+            </p>
+            <p>
+                <label for="artist">Artist:</label>
+                <input type="text" id="artist" name="artist" required />
+            </p>
+            <p>
+                <label for="rating">Rating:</label>
+                <input type="number" min="1" max="10" id="rating" name="rating" required />
+            </p>
+            <p>
+                <label for="genre">Genre:</label>
+                <input type="text" id="genre" name="genre" required />
+            </p>
+
+            <p>
+                <label for="released">Release Date:</label>
+                <input type="date" id="released" name="released" required />
+            </p>
+            
+
+            <p id="songs-p ">
+                <label class="inline">Songs:</label>
+                <a href="#" id="add-song">Add Song</a>
+                <section id="song-boxes"></section>
+            </p>
+            <p>
+                <button type="submit">Submit</button>
+            </p>
+        </form>
+    </div>
+</body>
+
+</html>
